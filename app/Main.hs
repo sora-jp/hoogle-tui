@@ -131,11 +131,12 @@ appEvent (VtyEvent e@(EvKey KDown [])) = zoom results $ handleListEvent e
 appEvent (VtyEvent e@(EvKey KEnter [])) = do
   selUrl <- targetURL <$> liftM2 (V.!) (use $ results.listElementsL) (use $ results.listSelectedL.non 0)
   liftIO $ command_ [EchoStdout False, EchoStderr False] "google-chrome-stable" [selUrl]
+  halt
 appEvent e = do
   zoom curStr $ handleEditorEvent e
   cs <- gets _curStr
   zoom results $ do
-    res <- liftIO (searchHoogle 60 . head . getEditContents $ cs)
+    res <- liftIO (searchHoogle 75 . head . getEditContents $ cs)
     modify $ listReplace (V.fromList res) (Just 0)
 
 dialogEvent :: BrickEvent Name e -> EventM Name St ()
