@@ -130,7 +130,7 @@ appEvent (VtyEvent e@(EvKey KUp []))   = zoom results $ handleListEvent e
 appEvent (VtyEvent e@(EvKey KDown [])) = zoom results $ handleListEvent e
 appEvent (VtyEvent e@(EvKey KEnter [])) = do
   selUrl <- targetURL <$> liftM2 (V.!) (use $ results.listElementsL) (use $ results.listSelectedL.non 0)
-  liftIO $ command_ [EchoStdout False, EchoStderr False] "google-chrome-stable" [selUrl]
+  liftIO $ command_ [EchoStdout False, EchoStderr False] "xdg-open" [selUrl]
   halt
 appEvent e = do
   zoom curStr $ handleEditorEvent e
