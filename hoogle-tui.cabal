@@ -29,7 +29,7 @@ executable hoogle-tui
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base ^>=4.16.3.0, hoogle, brick, microlens, microlens-th, microlens-mtl, vty, text, vector, command, text-zipper
+    build-depends:    base, hoogle, brick, microlens, microlens-th, microlens-mtl, vty, text, vector, command, text-zipper
     hs-source-dirs:   app
     ghc-options: -threaded -rtsopts
     default-language: Haskell2010

@@ -29,6 +29,8 @@ import System.Command
 
 data Name = SearchBox
           | DialogVp
+          | DialogActual
+          | DialogButtonA
           | SearchList deriving (Ord, Eq, Show)
 
 data InfoDialogButton = Close
@@ -37,7 +39,7 @@ data InfoDialogButton = Close
 data St = St {
                 _curStr :: Editor String Name,
                 _results :: List Name Target,
-                _infoDialog :: Dialog InfoDialogButton,
+                _infoDialog :: Dialog InfoDialogButton Name,
                 _infoDialogOpen :: Bool,
                 _vp :: ViewportScroll Name
              }
@@ -98,6 +100,7 @@ docsT t = (title <+> (vLimit 1 $ fill ' ') <+> package)
 cropAllBy :: Int -> Widget n -> Widget n
 cropAllBy n = translateBy (Location (n, n)) . cropTopBy n . cropLeftBy n . cropBottomBy n . cropRightBy n
 
+
 drawUI :: St -> [Widget Name]
 drawUI st = [dialog, ui]
   where
@@ -109,7 +112,7 @@ drawUI st = [dialog, ui]
        . cropAllBy 3
        . padAll 3
        $ renderDialog (st^.infoDialog)
-                {dialogTitle=Just $ "Documentation for " ++ fmtmod (targetModule tgt) "." ++ targetName tgt} idbody
+                {dialogTitle=Just . str $ "Documentation for " ++ fmtmod (targetModule tgt) "." ++ targetName tgt} idbody
     dialog = if st^.infoDialogOpen then rd else emptyWidget
     ui = (if st^.infoDialogOpen then forceAttr $ attrName "hidden" else id)
       $ joinBorders
@@ -143,9 +146,9 @@ dialogEvent :: BrickEvent Name e -> EventM Name St ()
 dialogEvent (VtyEvent (EvKey KEsc [])) = modify $ infoDialogOpen .~ False
 dialogEvent (VtyEvent (EvKey KLeft [])) = modify $ results %~ listMoveUp
 dialogEvent (VtyEvent (EvKey KRight [])) = modify $ results %~ listMoveDown
-dialogEvent (VtyEvent (EvKey KUp [])) = use vp >>= flip vScrollBy (-3)
-dialogEvent (VtyEvent (EvKey KDown [])) = use vp >>= flip vScrollBy 3
-dialogEvent e@(VtyEvent (EvKey KEnter [])) = modify (infoDialogOpen .~ False) >> appEvent e
+dialogEvent (VtyEvent (EvKey KUp [])) = use vp >>= \x -> vScrollBy x (-3)
+dialogEvent (VtyEvent (EvKey KDown [])) = use vp >>= \x -> vScrollBy x 3
+dialogEvent e@(VtyEvent (EvKey KEnter [])) = appEvent e
 dialogEvent (VtyEvent e) = zoom infoDialog $ handleDialogEvent e
 
 globalEvent :: BrickEvent Name e -> EventM Name St ()
@@ -183,7 +186,7 @@ initialState :: St
 initialState =
     St (editor SearchBox (Just 1) "")
        (list SearchList V.empty 1)
-       (dialog (Just "Documentation") (Just (0, [("Open Docs [Enter]", OpenDocumentation)])) 999)
+       (dialog (Just . str $ "Documentation") (Just (DialogActual, [("Open Docs [Enter]", DialogButtonA, OpenDocumentation)])) 999)
        False
        (viewportScroll DialogVp)
 
